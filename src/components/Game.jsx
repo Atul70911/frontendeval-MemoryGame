@@ -60,6 +60,7 @@ export default function Game({
         setPlayer1Score={setPlayer1Score}
         setPlayer2Score={setPlayer2Score}
         setStatus={setStatus}
+         onGameOver={() => setState("Winner")}
       />
     </>
   )

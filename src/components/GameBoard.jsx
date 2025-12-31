@@ -17,6 +17,7 @@ export default function GameBoard({
   setPlayer1Score,
   setPlayer2Score,
   setStatus,
+  onGameOver,
 }) {
   const [cards, setCards] = useState(() => makeDeck6x6())
   const [first, setFirst] = useState(null)
@@ -24,6 +25,14 @@ export default function GameBoard({
   const [disabled, setDisabled] = useState(false)
 
   const timerRef = useRef(null)
+  const gameOverSentRef = useRef(false)
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
 
   const handlePick = (card) => {
     if (disabled) return
@@ -39,40 +48,55 @@ export default function GameBoard({
     setDisabled(false)
   }
 
+  // 1) Resolve a turn (match/mismatch)
   useEffect(() => {
     if (!first || !second) return
 
     setDisabled(true)
 
     if (first.value === second.value) {
-      // keep revealed
       setCards((prev) =>
-        prev.map((c) =>
-          c.value === first.value ? { ...c, isMatched: true } : c
-        )
+        prev.map((c) => (c.value === first.value ? { ...c, isMatched: true } : c))
       )
 
-      // score
       if (turn === 1) setPlayer1Score((s) => s + 1)
       else setPlayer2Score((s) => s + 1)
 
-      setStatus({ type: "match", text: "MATCH! +1" })
+      setStatus?.({ type: "match", text: "MATCH! +1" })
 
-      // same player continues
+      // keep same player, just reset picks
       resetTurn()
     } else {
-      setStatus({ type: "mismatch", text: "NO MATCH!" })
+      setStatus?.({ type: "mismatch", text: "NO MATCH!" })
 
+      clearTimer()
       timerRef.current = setTimeout(() => {
         setTurn((t) => (t === 1 ? 2 : 1))
         resetTurn()
       }, 700)
     }
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
+    return () => clearTimer()
   }, [first, second, turn, setTurn, setPlayer1Score, setPlayer2Score, setStatus])
+
+  // 2) Announce winner only when ALL matched AND no cards are currently selected
+  useEffect(() => {
+    if (gameOverSentRef.current) return
+    if (first || second) return // wait until the last pair has finished showing/reset
+    if (!cards.length) return
+
+    const allMatched = cards.every((c) => c.isMatched)
+    if (!allMatched) return
+
+    gameOverSentRef.current = true
+    clearTimer()
+    timerRef.current = setTimeout(() => {
+      onGameOver?.()
+    }, 300)
+  }, [cards, first, second, onGameOver])
+
+  // cleanup on unmount
+  useEffect(() => () => clearTimer(), [])
 
   const isFlipped = (card) =>
     card.isMatched || card.id === first?.id || card.id === second?.id

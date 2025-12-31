@@ -3,6 +3,8 @@ import "./App.css"
 import Home from "./components/Home"
 import Game from "./components/Game"
 import VantaBackground from "./components/VantaBackground"
+import Winner from "./components/Winner"
+
 
 function App() {
   const [state, setState] = useState("Home")
@@ -36,6 +38,15 @@ function App() {
           player2={player2}
           player2Score={player2Score}
           setPlayer2Score={setPlayer2Score}
+        />
+      )}
+        {state === "Winner" && (
+        <Winner
+          setState={setState}
+          player1={player1 || "Player 1"}
+          player2={player2 || "Player 2"}
+          player1Score={player1Score}
+          player2Score={player2Score}
         />
       )}
     </VantaBackground>
