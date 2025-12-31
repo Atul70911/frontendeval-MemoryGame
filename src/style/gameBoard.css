@@ -1,20 +1,76 @@
-.board{
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
-  width: min(720px, 92vw);
-  margin: 60px auto;
+:root{
+  --cols: 6;
 }
 
-.card{
-  aspect-ratio: 1 / 1;
-  border-radius: 14px;
-  border: 4px solid #14001f;
-  background: rgba(255, 246, 214, 0.85);
-  font-size: clamp(1.2rem, 3vw, 2.4rem);
-  cursor: pointer;
+/*
+  The board computes a card size that fits BOTH:
+  - viewport width (vw)
+  - viewport height (vh) minus UI height
+  This keeps all 36 cards visible.
+*/
+.board{
+  /* tweak this if your scoreboard/hud are taller/shorter */
+  --ui-h: 240px;
+
+  --gap: clamp(6px, 1.2vw, 12px);
+  --pad: clamp(10px, 1.8vw, 16px);
+
+  /* UPDATED: scale the card size down slightly */
+  --card: calc(
+    min(
+      calc((100vw - (2 * var(--pad)) - ((var(--cols) - 1) * var(--gap))) / var(--cols)),
+      calc((100vh - var(--ui-h) - (2 * var(--pad)) - ((var(--cols) - 1) * var(--gap))) / var(--cols))
+    ) * 0.92
+  );
+
+  width: calc((var(--card) * var(--cols)) + ((var(--cols) - 1) * var(--gap)) + (2 * var(--pad)));
+  margin: 10px auto 0;
+  padding: var(--pad);
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--card));
+  gap: var(--gap);
+
+  border-radius: 22px;
+  background: var(--panel);
+  border: 5px solid var(--ink);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 18px 0 var(--ink);
 }
+
+/* square cards */
+.card{
+  width: var(--card);
+  aspect-ratio: 1; /* keep squares */
+  border-radius: 14px;
+
+  border: 4px solid var(--ink);
+  background: rgba(255, 246, 214, 0.90);
+  color: var(--ink);
+
+  font-size: clamp(0.95rem, calc(var(--card) * 0.38), 2.2rem);
+  cursor: pointer;
+
+  box-shadow: 0 10px 0 var(--ink);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.card:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.card:disabled{
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+
 .card.flipped{
   background: linear-gradient(180deg, #db4e06, #7c2847);
-  color: #14001f;
+  box-shadow:
+    0 10px 0 var(--ink),
+    0 0 18px rgba(219, 78, 6, 0.22);
 }
